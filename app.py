@@ -3,12 +3,20 @@ import streamlit as st
 import requests
 
 def fetch_poster(movie_id):
-    url = "https://api.themoviedb.org/3/movie/{}?api_key={API_KEY}&language=en-US".format(movie_id)
-    data = requests.get(url)
-    data = data.json()
-    poster_path = data['poster_path']
-    full_path = "https://image.tmdb.org/t/p/w500/" + poster_path
-    return full_path
+    try:
+        url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=ffae349c1bb1f0a9c13351b500a96aac&language=en-US"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()  # Raise HTTPError for bad responses (4xx and 5xx)
+        data = response.json()
+        poster_path = data.get('poster_path', None)
+        if poster_path:
+            return f"https://image.tmdb.org/t/p/w500/{poster_path}"
+        else:
+            return "https://via.placeholder.com/500x750?text=No+Image"  # Fallback image
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching movie poster: {e}")
+        return "https://via.placeholder.com/500x750?text=Error"  # Fallback image
+
 
 def recommend(movie):
     index = movies[movies['title'] == movie].index[0]
@@ -52,7 +60,3 @@ if st.button('Show Recommendation'):
     with col5:
         st.text(recommended_movie_names[4])
         st.image(recommended_movie_posters[4])
-
-
-
-
